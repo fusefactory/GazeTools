@@ -9,13 +9,13 @@ namespace GazeTools
 	{
 		public Chargeable Chargeable;
 		public PlayableDirector Director;
-      
+		public bool UsePercentage = false;
 		// Use this for initialization
 		void Start()
 		{
 			if (this.Chargeable == null) this.Chargeable = GetComponent<Chargeable>();
 			if (this.Director == null) this.Director = GetComponent<PlayableDirector>();
-
+         
 			if (this.Chargeable != null) this.Chargeable.ChargeChangeEvent.AddListener(this.OnChargeChange);
 		}
 
@@ -23,12 +23,13 @@ namespace GazeTools
 		{
 			if (this.Chargeable != null) this.Chargeable.ChargeChangeEvent.RemoveListener(this.OnChargeChange);
 		}
-      
+     
 		// Update is called once per frame
 		void OnChargeChange(Chargeable c)
 		{
 			if (!this.isActiveAndEnabled) return;
-			this.Director.time = this.Director.duration * c.ChargePercentage;
+			float progress = this.UsePercentage ? c.ChargePercentage : c.Charge;
+			this.Director.time = this.Director.duration * progress;
 			this.Director.Evaluate();
 		}
 	}
