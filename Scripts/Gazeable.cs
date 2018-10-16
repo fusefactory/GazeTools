@@ -16,10 +16,12 @@ namespace GazeTools
 		public class Gazer : System.IDisposable
 		{
 			public Gazeable Gazeable { get; private set; }
-
+			public bool IsActive { get { return this.isActive; } }
+         
 			private System.Action<Gazer> activateFunc = null;
 			private System.Action<Gazer> deactivateFunc = null;
-
+			private bool isActive = false;
+         
 			public Gazer(Gazeable g, System.Action<Gazer> activateFunc, System.Action<Gazer> deactivateFunc)
 			{
 				this.Gazeable = g;
@@ -35,11 +37,17 @@ namespace GazeTools
 			public void Activate()
 			{
 				this.activateFunc.Invoke(this);
+				this.isActive = true;
 			}
 
 			public void Deactivate()
 			{
 				this.deactivateFunc.Invoke(this);
+				this.isActive = false;
+			}
+
+			public void Toggle() {
+				this.SetActive(!this.isActive);
 			}
 
 			public void Dispose()
@@ -85,22 +93,22 @@ namespace GazeTools
 			gazer.Activate();
 			return gazer;
 		}
-      
+
 		public void StartGazer(Object owner)
         {
 			Gazer gazer;
-         
+
 			// find existing gazer instance for given owner
 			if (hostedGazers.TryGetValue(owner, out gazer)) {
 				gazer.Activate();
 				return;
 			}
-         
+
             // start new gazer and cache it
 			gazer = StartGazer();
 			hostedGazers.Add(owner, gazer);         
         }
-
+      
         public void EndGazer(Object owner)
         {
 			Gazer gazer;
@@ -110,6 +118,19 @@ namespace GazeTools
             {
                 gazer.Deactivate();
             }
+        }
+      
+		public void ToggleGazer(Object owner)
+        {
+            Gazer gazer;
+         
+            // find existing gazer instance for given owner
+            if (hostedGazers.TryGetValue(owner, out gazer))
+            {
+				gazer.Toggle();
+			} else {
+				this.StartGazer(owner);
+			}
         }
       
 		private void StartGazer(Gazer gazer)
