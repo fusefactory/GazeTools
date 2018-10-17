@@ -54,8 +54,8 @@ namespace GazeTools
 		void Update()
 		{
 			if (this.actor_ == null) return;
-         
-			float angle = GetAngle();
+
+			float angle = GetAngle(this.actor_, this.Target);
 			float maxAngle = Mathf.Max(this.MaxAngleMinimum, this.MaxAngleBase - this.MaxAngleDistanceCorrection * (this.Target.position - this.actor_.position).magnitude);
          
 			bool isFocused = angle <= maxAngle;
@@ -78,20 +78,17 @@ namespace GazeTools
 		}
 #endregion
 
-#region Custom Private Methods
 		/// <summary>
-		///  Return angle between the actor's look (forward) vector and the vector from the actor to the target
-		///  0.0 means the actor is exactly facing the target
-		///  180.0 means the actor is facing exactly away from the target
-		/// </summary>
-		/// <returns>The focus percentage.</returns>
-		private float GetAngle()
-		{
-			if (this.actor_ == null) return 180.0f;
-			Vector3 targetVector = (this.Target.position - this.actor_.position).normalized;
-			Vector3 lookVector = this.actor_.forward.normalized;
-			return Vector3.Angle(targetVector, lookVector);         
+        ///  Return angle between the actor's look (forward) vector and the vector from the actor to the target
+        ///  0.0 means the actor is exactly facing the target
+        ///  180.0 means the actor is facing exactly away from the target
+        /// </summary>
+        /// <returns>The ange in degrees.</returns>
+		public static float GetAngle(Transform viewer, Transform target) {
+			if (viewer == null || target == null) return 180.0f;
+			Vector3 delta = (target.position - viewer.position).normalized;
+			Vector3 forward = viewer.forward.normalized;
+			return Vector3.Angle(delta, forward);
 		}
-#endregion
 	}
 }
