@@ -31,8 +31,17 @@ namespace GazeTools
 		private Gazeable.Gazer gazer_ = null;
       
 		private Transform actor_ { get { return this.Actor != null ? this.Actor : (Camera.main == null ? null : Camera.main.transform); } }
-      
-#region Unity Methods
+
+		private void OnDisable()
+		{
+			if (this.gazer_ != null)
+			{
+				this.gazer_.Dispose();
+				this.gazer_ = null;
+			}
+		}
+
+		#region Unity Methods
 		void Start()
 		{
 			// gazeable defaults to the gazeable on our game object
@@ -61,7 +70,7 @@ namespace GazeTools
 				this.gazer_.Dispose();
 				this.gazer_ = null;
 			}
-
+         
 #if UNITY_EDITOR
             DebugInfo.Angle = angle;
 			DebugInfo.MaxAngle = maxAngle;
