@@ -13,17 +13,19 @@ namespace GazeTools
 		public Transform Target;
 		[Tooltip("When left empty, will look for Gazeable instance on the same gameObject")]
 		public Gazeable Gazeable;
-      
+
 		public float MaxAngleBase = 10.0f;
 		public float MaxAngleDistanceCorrection = 0.1f;
-
+		public float MaxAngleMinimum = 1.5f;
+      
 #if UNITY_EDITOR
-        [Header("Debug values")]
-        public float angle_ = 0.0f;
-		public float maxAngle;
-#else
-        private float angle_ = 0.0f;
-		private float maxAngle;
+		[System.Serializable]
+		public class Dinfo {
+			public float Angle = 0.0f;
+			public float MaxAngle = 0.0f;
+		}
+      
+		public Dinfo DebugInfo;
 #endif
       
 		private Gazeable.Gazer gazer_ = null;
@@ -42,21 +44,26 @@ namespace GazeTools
 
 		void Update()
 		{
-			this.angle_ = GetAngle();
-			this.maxAngle = this.MaxAngleBase - this.MaxAngleDistanceCorrection * (this.Target.position - this.actor_.position).magnitude;
-
-			bool isFocused = angle_ <= maxAngle;
+			float angle = GetAngle();
+			float maxAngle = Mathf.Max(this.MaxAngleMinimum, this.MaxAngleBase - this.MaxAngleDistanceCorrection * (this.Target.position - this.actor_.position).magnitude);
+         
+			bool isFocused = angle <= maxAngle;
          
 			if (isFocused && this.gazer_ == null)
 			{
 				this.gazer_ = this.Gazeable.StartGazer();
 			}
-         
+
 			if (this.gazer_ != null && !isFocused)
 			{
 				this.gazer_.Dispose();
 				this.gazer_ = null;
 			}
+
+#if UNITY_EDITOR
+            DebugInfo.Angle = angle;
+			DebugInfo.MaxAngle = maxAngle;
+#endif
 		}
 #endregion
 
@@ -69,6 +76,7 @@ namespace GazeTools
 		/// <returns>The focus percentage.</returns>
 		private float GetAngle()
 		{
+			if (this.actor_ == null) return 180.0f;
 			Vector3 targetVector = (this.Target.position - this.actor_.position).normalized;
 			Vector3 lookVector = this.actor_.forward.normalized;
 			return Vector3.Angle(targetVector, lookVector);         
