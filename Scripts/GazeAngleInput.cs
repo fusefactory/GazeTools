@@ -30,7 +30,7 @@ namespace GazeTools
       
 		private Gazeable.Gazer gazer_ = null;
       
-		private Transform actor_ { get { return this.Actor != null ? this.Actor : Camera.main.transform; } }
+		private Transform actor_ { get { return this.Actor != null ? this.Actor : (Camera.main == null ? null : Camera.main.transform); } }
       
 #region Unity Methods
 		void Start()
@@ -44,6 +44,8 @@ namespace GazeTools
 
 		void Update()
 		{
+			if (this.actor_ == null) return;
+         
 			float angle = GetAngle();
 			float maxAngle = Mathf.Max(this.MaxAngleMinimum, this.MaxAngleBase - this.MaxAngleDistanceCorrection * (this.Target.position - this.actor_.position).magnitude);
          
