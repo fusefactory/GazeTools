@@ -201,6 +201,12 @@ namespace GazeTools
 			this.chargeTime = this.ChargeDur * p;
 			this.state = State.MANUAL;         
 		}
+
+		public void SetChargeDuration(float dur) {
+			float percentage = this.ChargePercentage;
+			this.ChargeDur = dur;
+			this.SetPercentage(percentage);
+		}
 		#endregion
 	}
 }
