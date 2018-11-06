@@ -38,7 +38,8 @@ namespace GazeTools
 
 		void Update()
 		{
-			this.focusPercentage_ = GetFocusPercentage();
+			this.focusPercentage_ = GetFocusPercentage(this.target, this.actor_);
+         
 			bool isFocused = focusPercentage_ >= minFocusLevel;
 
 			if (isFocused && this.gazer_ == null)
@@ -53,24 +54,19 @@ namespace GazeTools
 			}
 		}
 		#endregion
-
-		#region Custom Private Methods
+      
 		/// <summary>
 		///  Return float value in the range from 0.0 to 1.0;
 		///  0.0 means the subject is facing 180 degrees is the opposite direction
 		///  1.0 means the subject is facing exactly towards the target
 		/// </summary>
 		/// <returns>The focus percentage.</returns>
-		private float GetFocusPercentage()
-		{
-			Transform tar = target;
+		public static float GetFocusPercentage(Transform actor, Transform target) {         
+            if (target == null || actor == null) return 0.0f;
 
-			if (tar == null || this.actor_ == null) return 0.0f;
-
-			Vector3 targetPoint = (tar.position - this.actor_.position).normalized;
-			Vector3 lookPoint = this.actor_.forward.normalized;
-			return 1.0f - (lookPoint - targetPoint).magnitude / 2.0f;
+            Vector3 targetPoint = (target.position - actor.position).normalized;
+            Vector3 lookPoint = actor.forward.normalized;
+            return 1.0f - (lookPoint - targetPoint).magnitude / 2.0f;
 		}
-		#endregion
 	}
 }
