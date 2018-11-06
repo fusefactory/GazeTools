@@ -26,6 +26,15 @@ namespace GazeTools
 		private Transform actor_ { get { return this.actor == null ? (Camera.main == null ? null : Camera.main.transform) : this.actor; }}
 		#endregion
 
+#if UNITY_EDITOR
+		[System.Serializable]
+		public class Dinfo {
+			public float FocusPercentage = 0.0f;
+		}
+
+		public Dinfo DebugInfo;
+#endif
+      
 		#region Unity Methods
 		void Start()
 		{
@@ -38,7 +47,11 @@ namespace GazeTools
 
 		void Update()
 		{
-			this.focusPercentage_ = GetFocusPercentage(this.target, this.actor_);
+			this.focusPercentage_ = GetFocusPercentage(this.actor_, this.target);
+
+#if UNITY_EDITOR
+			this.DebugInfo.FocusPercentage = this.focusPercentage_;
+#endif
          
 			bool isFocused = focusPercentage_ >= minFocusLevel;
 
