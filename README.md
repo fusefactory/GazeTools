@@ -4,6 +4,9 @@ _Unity (C-Sharp) classes for VR user interactions_
 ## Installation
 Add the contents of this repository to your Unity Project's Assets folder
 
+## Documentation
+Doxygen html documentation: https://fusefactory.github.io/GazeTools/docs/html/index.html
+
 ## Usage: Gazeable
 ```Gazeable``` is basically a fancy semantic wrapper around a single boolean state, which is true when the subject is "Gazed At" and false when not.
 
