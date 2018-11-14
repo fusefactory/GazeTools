@@ -13,24 +13,35 @@ namespace GazeTools
 		public Transform Target;
 		[Tooltip("When left empty, will look for Gazeable instance on the same gameObject")]
 		public Gazeable Gazeable;
-      
+
 		public float MaxAngleBase = 10.0f;
 		public float MaxAngleDistanceCorrection = 0.1f;
-
+		public float MaxAngleMinimum = 1.5f;
+      
 #if UNITY_EDITOR
-        [Header("Debug values")]
-        public float angle_ = 0.0f;
-		public float maxAngle;
-#else
-        private float angle_ = 0.0f;
-		private float maxAngle;
+		[System.Serializable]
+		public class Dinfo {
+			public float Angle = 0.0f;
+			public float MaxAngle = 0.0f;
+		}
+      
+		public Dinfo DebugInfo;
 #endif
       
 		private Gazeable.Gazer gazer_ = null;
       
-		private Transform actor_ { get { return this.Actor != null ? this.Actor : Camera.main.transform; } }
-      
-#region Unity Methods
+		private Transform actor_ { get { return this.Actor != null ? this.Actor : (Camera.main == null ? null : Camera.main.transform); } }
+
+		private void OnDisable()
+		{
+			if (this.gazer_ != null)
+			{
+				this.gazer_.Dispose();
+				this.gazer_ = null;
+			}
+		}
+
+		#region Unity Methods
 		void Start()
 		{
 			// gazeable defaults to the gazeable on our game object
@@ -42,37 +53,42 @@ namespace GazeTools
 
 		void Update()
 		{
-			this.angle_ = GetAngle();
-			this.maxAngle = this.MaxAngleBase - this.MaxAngleDistanceCorrection * (this.Target.position - this.actor_.position).magnitude;
+			if (this.actor_ == null) return;
 
-			bool isFocused = angle_ <= maxAngle;
+			float angle = GetAngle(this.actor_, this.Target);
+			float maxAngle = Mathf.Max(this.MaxAngleMinimum, this.MaxAngleBase - this.MaxAngleDistanceCorrection * (this.Target.position - this.actor_.position).magnitude);
+         
+			bool isFocused = angle <= maxAngle;
          
 			if (isFocused && this.gazer_ == null)
 			{
 				this.gazer_ = this.Gazeable.StartGazer();
 			}
-         
+
 			if (this.gazer_ != null && !isFocused)
 			{
 				this.gazer_.Dispose();
 				this.gazer_ = null;
 			}
+         
+#if UNITY_EDITOR
+            DebugInfo.Angle = angle;
+			DebugInfo.MaxAngle = maxAngle;
+#endif
 		}
 #endregion
 
-#region Custom Private Methods
 		/// <summary>
-		///  Return angle between the actor's look (forward) vector and the vector from the actor to the target
-		///  0.0 means the actor is exactly facing the target
-		///  180.0 means the actor is facing exactly away from the target
-		/// </summary>
-		/// <returns>The focus percentage.</returns>
-		private float GetAngle()
-		{
-			Vector3 targetVector = (this.Target.position - this.actor_.position).normalized;
-			Vector3 lookVector = this.actor_.forward.normalized;
-			return Vector3.Angle(targetVector, lookVector);         
+        ///  Return angle between the actor's look (forward) vector and the vector from the actor to the target
+        ///  0.0 means the actor is exactly facing the target
+        ///  180.0 means the actor is facing exactly away from the target
+        /// </summary>
+        /// <returns>The ange in degrees.</returns>
+		public static float GetAngle(Transform viewer, Transform target) {
+			if (viewer == null || target == null) return 180.0f;
+			Vector3 delta = (target.position - viewer.position).normalized;
+			Vector3 forward = viewer.forward.normalized;
+			return Vector3.Angle(delta, forward);
 		}
-#endregion
 	}
 }

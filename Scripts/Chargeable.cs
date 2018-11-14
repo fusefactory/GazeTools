@@ -6,15 +6,15 @@ using UnityEngine.Events;
 namespace GazeTools
 {
 	/// <summary>
-    /// Chargeable animates a float value back-and-forth along a configurable based
+	/// Chargeable animates a float value back-and-forth along a configurable based
 	/// on its boolean charging state; it's charging when there is at least one registered
 	/// charger, it's discharging (animating backwards) when there are no registered chargers.
-    /// </summary>
+	/// </summary>
 	public class Chargeable : MonoBehaviour
 	{
 		public enum State
 		{
-			IDLE, CHARGING, CHARGED, DECHARGING
+			IDLE, CHARGING, CHARGED, DECHARGING, MANUAL
 		}
 
 		public State state { get; private set; }
@@ -23,34 +23,35 @@ namespace GazeTools
 
 #if UNITY_EDITOR
 		[System.Serializable]
-		public class Dinfo {
+		public class Dinfo
+		{
 			public bool IsCharging = false;
 			public float Charge = 0.0f;
 			public float Percentage = 0.0f;
 			public float Time = 0.0f;
 			public float Duration = 0.0f;
 		}
-      
+
 		public Dinfo DebugInfo;
 #endif
 
 		[System.Serializable]
-        public class ChargeableEvent : UnityEvent<Chargeable> { };
-        [Header("Events")]
-        public ChargeableEvent StateChangeEvent = new ChargeableEvent();
-        [SerializeField]
-        public ChargeableEvent ChargedEvent = new ChargeableEvent();
-        public ChargeableEvent IdleEvent = new ChargeableEvent();
-        public ChargeableEvent ChargingEvent = new ChargeableEvent();
-        public ChargeableEvent DechargingEvent = new ChargeableEvent();
-        public ChargeableEvent ChargeChangeEvent = new ChargeableEvent();
-        [System.Serializable]
-        public class FloatEvent : UnityEvent<float> { };
-        [SerializeField]
-        public FloatEvent ChargeValueEvent = new FloatEvent();
-
-		private float chargeTime = 0.0f;
+		public class ChargeableEvent : UnityEvent<Chargeable> { };
+		[Header("Events")]
+		public ChargeableEvent StateChangeEvent = new ChargeableEvent();
+		[SerializeField]
+		public ChargeableEvent ChargedEvent = new ChargeableEvent();
+		public ChargeableEvent IdleEvent = new ChargeableEvent();
+		public ChargeableEvent ChargingEvent = new ChargeableEvent();
+		public ChargeableEvent DechargingEvent = new ChargeableEvent();
+		public ChargeableEvent ChargeChangeEvent = new ChargeableEvent();
+		[System.Serializable]
+		public class FloatEvent : UnityEvent<float> { };
+		[SerializeField]
+		public FloatEvent ChargeValueEvent = new FloatEvent();
       
+		private float chargeTime = 0.0f;
+
 		public float ChargePercentage
 		{
 			get
@@ -58,7 +59,7 @@ namespace GazeTools
 				return this.chargeTime / this.ChargeDur;
 			}
 		}
-      
+
 		public float Charge
 		{
 			get
@@ -66,7 +67,7 @@ namespace GazeTools
 				return this.chargeCurve.Evaluate(this.chargeTime);
 			}
 		}
-      
+
 		public float ChargeDur
 		{
 			get
@@ -80,7 +81,7 @@ namespace GazeTools
 		}
 
 		private List<Object> chargingObjects = new List<Object>();
-
+      
 		void Start()
 		{
 			this.state = State.IDLE;
@@ -94,7 +95,7 @@ namespace GazeTools
 				this.SetState(State.CHARGING);
 			}
 		}
-
+      
 		private void OnDisable()
 		{
 			this.SetState(State.IDLE);
@@ -102,6 +103,14 @@ namespace GazeTools
 
 		void Update()
 		{
+			if (this.state == State.MANUAL) {
+				var p = this.ChargePercentage;
+				if (p >= 1.0f && this.chargingObjects.Count > 0) this.SetState(State.CHARGED);
+				if (p >= 1.0f && this.chargingObjects.Count == 0) this.SetState(State.DECHARGING);
+				if (p < float.Epsilon && this.chargingObjects.Count == 0) this.SetState(State.IDLE);
+				if (p < float.Epsilon && this.chargingObjects.Count > 0) this.SetState(State.CHARGING);
+			}
+
 			if (this.state == State.IDLE) return;
 
 			if (this.state == State.CHARGING)
@@ -147,13 +156,28 @@ namespace GazeTools
 #endif
 		}
 
+		private void SetState(State newstate)
+		{
+			bool change = this.state != newstate;
+			this.state = newstate;
+
+			if (!change) return;
+
+			this.StateChangeEvent.Invoke(this);
+			if (state == State.CHARGED) this.ChargedEvent.Invoke(this);
+			if (state == State.IDLE) this.IdleEvent.Invoke(this);
+			if (state == State.CHARGING) this.ChargingEvent.Invoke(this);
+			if (state == State.DECHARGING) this.DechargingEvent.Invoke(this);
+		}
+      
+		#region Public Methods
 		// AddCharger registers any kind of object as a 'charging actor'
 		// (there can be multiple charging actors)
 		// When this Chargeable has at least one charging actor; it will charge
 		// or stay fully charged when charged.
 		// When it has no charging actors, it will decharge or stay idle when
 		// fully discharged
-      
+
 		public void AddCharger(Object o)
 		{
 			if (this.chargingObjects.Contains(o)) return;
@@ -168,19 +192,21 @@ namespace GazeTools
 				if (this.enabled && this.chargingObjects.Count == 0) this.SetState(State.DECHARGING);
 			}
 		}
-      
-		private void SetState(State newstate)
-		{
-			bool change = this.state != newstate;
-			this.state = newstate;
 
-			if (!change) return;
-
-			this.StateChangeEvent.Invoke(this);
-			if (state == State.CHARGED) this.ChargedEvent.Invoke(this);
-			if (state == State.IDLE) this.IdleEvent.Invoke(this);
-			if (state == State.CHARGING) this.ChargingEvent.Invoke(this);
-			if (state == State.DECHARGING) this.DechargingEvent.Invoke(this);
+        /// <summary>
+        /// Sets the current charge in percentage of the total charge
+        /// </summary>
+		/// <param name="p">The percentage value as a normalized float (0.0-1.0)</param>
+		public void SetPercentage(float p) {
+			this.chargeTime = this.ChargeDur * p;
+			this.state = State.MANUAL;         
 		}
+
+		public void SetChargeDuration(float dur) {
+			float percentage = this.ChargePercentage;
+			this.ChargeDur = dur;
+			this.SetPercentage(percentage);
+		}
+		#endregion
 	}
 }
