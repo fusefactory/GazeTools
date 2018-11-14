@@ -35,4 +35,4 @@ sysinfo.txt
 *.apk
 *.unitypackage
 
-docs
+# docs
