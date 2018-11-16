@@ -25,6 +25,8 @@ namespace GazeTools
 		[System.Serializable]
 		public class Dinfo
 		{
+			public int ChargersCount = 0;
+			public State State = State.IDLE;
 			public bool IsCharging = false;
 			public float Charge = 0.0f;
 			public float Percentage = 0.0f;
@@ -51,7 +53,7 @@ namespace GazeTools
 		public FloatEvent ChargeValueEvent = new FloatEvent();
       
 		private float chargeTime = 0.0f;
-
+      
 		public float ChargePercentage
 		{
 			get
@@ -103,6 +105,9 @@ namespace GazeTools
 
 		void Update()
 		{
+#if UNITY_EDITOR
+			this.DebugInfo.State = this.state;
+#endif
 			if (this.state == State.MANUAL) {
 				var p = this.ChargePercentage;
 				if (p >= 1.0f && this.chargingObjects.Count > 0) this.SetState(State.CHARGED);
@@ -169,7 +174,7 @@ namespace GazeTools
 			if (state == State.CHARGING) this.ChargingEvent.Invoke(this);
 			if (state == State.DECHARGING) this.DechargingEvent.Invoke(this);
 		}
-      
+
 		#region Public Methods
 		// AddCharger registers any kind of object as a 'charging actor'
 		// (there can be multiple charging actors)
@@ -182,6 +187,10 @@ namespace GazeTools
 		{
 			if (this.chargingObjects.Contains(o)) return;
 			this.chargingObjects.Add(o);
+#if UNITY_EDITOR         
+			this.DebugInfo.ChargersCount = this.chargingObjects.Count;
+#endif
+
 			if (this.enabled && this.chargingObjects.Count == 1) this.SetState(State.CHARGING);
 		}
 
@@ -189,6 +198,10 @@ namespace GazeTools
 		{
 			if (this.chargingObjects.Remove(o))
 			{
+#if UNITY_EDITOR
+                this.DebugInfo.ChargersCount = this.chargingObjects.Count;
+#endif
+            
 				if (this.enabled && this.chargingObjects.Count == 0) this.SetState(State.DECHARGING);
 			}
 		}
