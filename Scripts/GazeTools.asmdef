@@ -1,3 +1,10 @@
-﻿{
-	"name": "GazeTools"
+{
+    "name": "GazeTools",
+    "references": [
+        "RSG"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
 }
