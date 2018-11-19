@@ -31,8 +31,21 @@ namespace GazeTools
         private bool isLocal = false;
         private List<System.Action> TransportEndCallbacks = new List<System.Action>();
 
-		public float Progress { get { return this.curvetime / this.curvelength; } }
+
+#if UNITY_EDITOR
+		[System.Serializable]
+		public class Dinfo {
+			public float duration = 0.0f;
+			public float t = 0.0f;
+			public float progress = 0.0f;
+			public bool finished = false;
+		}
+
+		public Dinfo DebugInfo;
+#endif
       
+		public float Progress { get { return this.curvetime / this.curvelength; } }
+
 		void Start()
 		{
 			if (this.curve.keys.Length == 0)
@@ -45,6 +58,10 @@ namespace GazeTools
 				this.curvelength = kf.time;
 				kf.value = 1.0f;
 			}
+
+#if UNITY_EDITOR
+			this.DebugInfo.duration = this.curvelength;
+#endif
 		}
       
 		void Update()
@@ -70,8 +87,30 @@ namespace GazeTools
 				TransportProgressEvent.Invoke(Progress);
 
 				if (finished) this.FinaliseTransport();
+
+#if UNITY_EDITOR
+				this.DebugInfo.t = this.curvetime;
+				this.DebugInfo.progress = this.Progress;
+				this.DebugInfo.finished = finished;
+#endif
 			}
 		}
+
+		public void TransportNow() {
+			this.TransportTo(this.TargetTransform);
+		}
+
+		public void TransportFrom(Vector3 origin)
+        {
+			this.transform.position = origin;
+			if (this.TargetTransform != null) this.TransportTo(this.TargetTransform);
+        }
+      
+		public void TransportToTransform(Transform transform)
+        {
+            this.TransportTo(transform.position);
+            this.TargetTransform = transform;
+        }
 
 		public Promise TransportTo(Transform transform)
 		{
@@ -84,7 +123,7 @@ namespace GazeTools
 		{
 			return this.TransportTo(lpos, true);
 		}
-      
+
 		public Promise TransportTo(Vector3 position, bool local = false)
 		{
 			return new Promise((resolve, reject) =>
