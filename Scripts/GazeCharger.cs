@@ -13,8 +13,8 @@ namespace GazeTools
       
 		void Start()
 		{
-			this.gazeable = this.gameObject.GetComponent<Gazeable>();
-			this.chargeable = this.gameObject.GetComponent<Chargeable>();
+			if (this.gazeable == null) this.gazeable = this.gameObject.GetComponent<Gazeable>();
+			if (this.chargeable == null) this.chargeable = this.gameObject.GetComponent<Chargeable>();
 
 			if (this.gazeable == null || this.chargeable == null)
 			{
