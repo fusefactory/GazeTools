@@ -111,7 +111,7 @@ namespace GazeTools
 			if (this.state == State.MANUAL) {
 				var p = this.ChargePercentage;
 				if (p >= 1.0f && this.chargingObjects.Count > 0) this.SetState(State.CHARGED);
-				if (p >= 1.0f && this.chargingObjects.Count == 0) this.SetState(State.DECHARGING);
+				if (p > 0.0f && this.chargingObjects.Count == 0) this.SetState(State.DECHARGING);
 				if (p < float.Epsilon && this.chargingObjects.Count == 0) this.SetState(State.IDLE);
 				if (p < float.Epsilon && this.chargingObjects.Count > 0) this.SetState(State.CHARGING);
 			}
@@ -214,7 +214,11 @@ namespace GazeTools
 			this.chargeTime = this.ChargeDur * p;
 			this.state = State.MANUAL;         
 		}
-
+      
+		public void AddChargePercentage(float p) {
+			this.SetPercentage(Mathf.Min(1.0f, ChargePercentage + p));
+		}
+      
 		public void SetChargeDuration(float dur) {
 			float percentage = this.ChargePercentage;
 			this.ChargeDur = dur;
