@@ -206,6 +206,12 @@ namespace GazeTools
 			}
 		}
 
+		public void ToggleCharger(Object o)
+		{
+			if (this.chargingObjects.Contains(o)) this.RemoveCharger(o);
+			else this.AddCharger(o);
+		}
+
         /// <summary>
         /// Sets the current charge in percentage of the total charge
         /// </summary>
